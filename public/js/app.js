@@ -154,7 +154,9 @@ function removeItem(partNumber) {
 }
 
 document.getElementById('checkout-btn').addEventListener('click', () => {
-  alert('Checkout coming soon!');
+  const customerName = document.getElementById('customer-name').value;
+  //console.log(customerName);
+  creditCardAuthorization('blank', '6011 1234 4321 1234', customerName, '12/2026', '654.32');
 });
 
 // Load catalog on startup
