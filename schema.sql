@@ -45,3 +45,10 @@ INSERT INTO shipping_rates (max_weight, fee) VALUES
   (30.00, 14.99),
   (9999.00, 19.99)
 ON DUPLICATE KEY UPDATE fee = VALUES(fee);
+
+-- tracks how many of each part we have in stock
+-- part_number matches the number column in the legacy parts table
+CREATE TABLE IF NOT EXISTS inventory (
+  part_number INT PRIMARY KEY,
+  qty_on_hand INT NOT NULL DEFAULT 0
+);
