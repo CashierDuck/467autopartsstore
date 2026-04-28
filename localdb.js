@@ -3,11 +3,11 @@
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-  host: 'switchback.proxy.rlwy.net',
-  port: 53809,
-  user: 'root',
-  password: 'DkjQxAANMGQdSpvNqKFgIEETSaRUNaTL',
-  database: 'railway',
+  host: process.env.DB_HOST || 'switchback.proxy.rlwy.net',
+  port: process.env.DB_PORT || 53809,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || 'DkjQxAANMGQdSpvNqKFgIEETSaRUNaTL',
+  database: process.env.DB_NAME || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
 });
