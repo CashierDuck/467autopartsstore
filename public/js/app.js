@@ -226,8 +226,20 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
     const transId = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     const authResult = await creditCardAuthorization(transId, cc, name, exp, total.toFixed(2));
 
-    if (!authResult || authResult.startsWith('Error')) {
-      errEl.textContent = authResult || 'Payment declined. Please check your card details.';
+    // NIU returns a json object, check for errors before continuing
+    let authCode = authResult;
+    try {
+      const parsed = JSON.parse(authResult);
+      if (parsed.errors && parsed.errors.length > 0) {
+        errEl.textContent = 'Payment declined: ' + parsed.errors.join(', ');
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (parsed.authorization) authCode = String(parsed.authorization);
+    } catch { /* plain string, check for Error prefix */ }
+
+    if (!authCode || authCode.startsWith('Error')) {
+      errEl.textContent = authCode || 'Payment declined. Please check your card details.';
       errEl.classList.remove('hidden');
       return;
     }
@@ -235,7 +247,7 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, address, cc, exp, items, authNumber: authResult }),
+      body: JSON.stringify({ name, email, address, cc, exp, items, authNumber: authCode }),
     });
     const data = await res.json();
 
@@ -248,15 +260,9 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
     Object.keys(cart).forEach(k => delete cart[k]);
     updateCartCount();
 
-    let displayAuth = authResult;
-    try {
-      const parsed = JSON.parse(authResult);
-      if (parsed.authorization) displayAuth = parsed.authorization;
-    } catch { /* plain string */ }
-
     document.getElementById('conf-order-id').textContent = data.orderId;
     document.getElementById('conf-total').textContent = data.total;
-    document.getElementById('conf-auth').textContent = displayAuth;
+    document.getElementById('conf-auth').textContent = authCode;
     showPage('confirmation');
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
