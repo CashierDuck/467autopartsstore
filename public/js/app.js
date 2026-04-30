@@ -6,12 +6,60 @@ const PAGE_SIZE = 30;
 let currentPage = 1;
 let allParts = [];
 
+// --- Staff login gate ---
+
+const PROTECTED_PAGES = ['admin', 'warehouse', 'receiving'];
+let staffLoggedIn = false;
+let pendingPage = null;
+let pendingLink = null;
+
+function showLoginModal(page, link) {
+  pendingPage = page;
+  pendingLink = link;
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').classList.add('hidden');
+  document.getElementById('login-modal').classList.remove('hidden');
+  document.getElementById('login-user').focus();
+}
+
+document.getElementById('login-submit-btn').addEventListener('click', () => {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  if (user === 'admin1' && pass === 'aps123') {
+    staffLoggedIn = true;
+    document.getElementById('login-modal').classList.add('hidden');
+    showPage(pendingPage);
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    if (pendingLink) pendingLink.classList.add('active');
+    pendingPage = null;
+    pendingLink = null;
+  } else {
+    document.getElementById('login-error').classList.remove('hidden');
+  }
+});
+
+document.getElementById('login-cancel-btn').addEventListener('click', () => {
+  document.getElementById('login-modal').classList.add('hidden');
+  pendingPage = null;
+  pendingLink = null;
+});
+
+// submit on Enter in password field
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-submit-btn').click();
+});
+
 // --- Page navigation ---
 
 document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
     const page = link.dataset.page;
+    if (PROTECTED_PAGES.includes(page) && !staffLoggedIn) {
+      showLoginModal(page, link);
+      return;
+    }
     showPage(page);
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     link.classList.add('active');
