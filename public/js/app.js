@@ -6,7 +6,7 @@ let currentPage = 1;
 let allParts = [];
 
 // pages that require staff login
-const PROTECTED_PAGES = ['admin', 'warehouse', 'receiving'];
+const staffPages = ['admin', 'warehouse', 'receiving'];
 let staffLoggedIn = false;
 let pendingPage = null;
 let pendingLink = null;
@@ -60,7 +60,7 @@ document.querySelectorAll('.nav-link').forEach(function(link) {
     e.preventDefault();
     const page = link.dataset.page;
 
-    if (PROTECTED_PAGES.includes(page) && !staffLoggedIn) {
+    if (staffPages.includes(page) && !staffLoggedIn) {
       showLoginModal(page, link);
       return;
     }
@@ -152,15 +152,18 @@ function renderPage() {
   const pageParts = allParts.slice(start, start + PAGE_SIZE);
   const totalPages = Math.ceil(allParts.length / PAGE_SIZE);
 
-  grid.innerHTML = pageParts.map(function(part) {
-    return '<div class="part-card" onclick="openPartModal(' + JSON.stringify(part).replace(/"/g, '&quot;') + ')">' +
+  let gridHtml = '';
+  for (let i = 0; i < pageParts.length; i++) {
+    const part = pageParts[i];
+    gridHtml += '<div class="part-card" onclick="openPartModal(' + JSON.stringify(part).replace(/"/g, '&quot;') + ')">' +
       '<img src="' + (part.pictureURL || '') + '" alt="' + part.description + '" onerror="this.src=\'/img/placeholder.png\'; this.onerror=null;" />' +
       '<div class="part-name">' + part.description + '</div>' +
       '<div class="part-price">$' + parseFloat(part.price).toFixed(2) + '</div>' +
       '<div class="part-num">Part #' + part.number + '</div>' +
       '<button onclick="event.stopPropagation(); addToCart(' + JSON.stringify(part).replace(/"/g, '&quot;') + ')">Add to Cart</button>' +
       '</div>';
-  }).join('');
+  }
+  grid.innerHTML = gridHtml;
 
   const pag = document.getElementById('pagination');
 
@@ -237,7 +240,7 @@ document.getElementById('sort-select').addEventListener('change', function() {
   renderPage();
 });
 
-// --- cart ---
+// cart functions
 
 function addToCart(part) {
   if (cart[part.number]) {
@@ -481,7 +484,7 @@ document.getElementById('checkout-form').addEventListener('submit', async functi
   }
 });
 
-// --- part preview modal ---
+// part preview modal
 
 let _modalPart = null;
 

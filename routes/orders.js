@@ -42,7 +42,7 @@ async function calcShipping(totalWeight) {
   return 19.99;
 }
 
-router.post('/', async (req, res) => {
+router.post('/', async function(req, res) {
   const name = req.body.name;
   const email = req.body.email;
   const address = req.body.address;
