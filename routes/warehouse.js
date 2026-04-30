@@ -17,11 +17,14 @@ router.get('/pack', async (req, res) => {
   }
 });
 
-// single order with items for the packing list view
+// single order with items for the packing list
 router.get('/pack/:id', async (req, res) => {
   try {
     const [[order]] = await db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
 
     const [items] = await db.query('SELECT * FROM order_items WHERE order_id = ?', [req.params.id]);
     res.json({ ...order, items });
@@ -33,7 +36,11 @@ router.get('/pack/:id', async (req, res) => {
 router.post('/pack/:id', async (req, res) => {
   try {
     const [[order]] = await db.query('SELECT status FROM orders WHERE id = ?', [req.params.id]);
-    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
     if (order.status !== 'authorized') {
       return res.status(400).json({ error: 'Order is not in authorized status.' });
     }
@@ -45,7 +52,7 @@ router.post('/pack/:id', async (req, res) => {
   }
 });
 
-// orders that are packed and ready to go out
+// orders that are packed and ready to ship
 router.get('/ship', async (req, res) => {
   try {
     const [orders] = await db.query(
@@ -61,7 +68,11 @@ router.get('/ship', async (req, res) => {
 router.post('/ship/:id', async (req, res) => {
   try {
     const [[order]] = await db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
     if (order.status !== 'packed') {
       return res.status(400).json({ error: 'Order must be packed before shipping.' });
     }
@@ -81,8 +92,8 @@ router.post('/ship/:id', async (req, res) => {
       await transporter.sendMail({
         from: 'mikerubio109@gmail.com',
         to: order.email,
-        subject: `Your order #${order.id} has shipped!`,
-        text: `Hi ${order.customer_name},\n\nGood news — your order #${order.id} is on its way!\n\nTotal: $${order.total}\n\nThanks for your order!\nAuto Parts Store`,
+        subject: 'Your order #' + order.id + ' has shipped!',
+        text: 'Hi ' + order.customer_name + ',\n\nGood news — your order #' + order.id + ' is on its way!\n\nTotal: $' + order.total + '\n\nThanks for your order!\nAuto Parts Store',
       });
     } catch (err) {
       console.warn('shipping email failed:', err.message);
@@ -94,17 +105,18 @@ router.post('/ship/:id', async (req, res) => {
   }
 });
 
-// add stock when new parts arrive - upsert so duplicates just add to qty
+// add stock when new parts come in - upsert so it just adds to existing qty
 router.post('/inventory', async (req, res) => {
-  const { part_number, qty } = req.body;
+  const part_number = req.body.part_number;
+  const qty = req.body.qty;
+
   if (!part_number || !qty) {
     return res.status(400).json({ error: 'part_number and qty are required.' });
   }
 
   try {
     await db.query(
-      `INSERT INTO inventory (part_number, qty_on_hand) VALUES (?, ?)
-       ON DUPLICATE KEY UPDATE qty_on_hand = qty_on_hand + ?`,
+      'INSERT INTO inventory (part_number, qty_on_hand) VALUES (?, ?) ON DUPLICATE KEY UPDATE qty_on_hand = qty_on_hand + ?',
       [part_number, qty, qty]
     );
     res.json({ success: true });

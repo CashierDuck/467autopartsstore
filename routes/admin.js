@@ -6,15 +6,35 @@ const db = require('../localdb');
 
 // get all orders, filters are all optional
 router.get('/orders', async (req, res) => {
-  const { status, from, to, minPrice, maxPrice } = req.query;
+  const status = req.query.status;
+  const from = req.query.from;
+  const to = req.query.to;
+  const minPrice = req.query.minPrice;
+  const maxPrice = req.query.maxPrice;
+
   let query = 'SELECT * FROM orders WHERE 1=1';
   const params = [];
 
-  if (status)   { query += ' AND status = ?'; params.push(status); }
-  if (from)     { query += ' AND created_at >= ?'; params.push(from); }
-  if (to)       { query += ' AND created_at <= ?'; params.push(to + ' 23:59:59'); }
-  if (minPrice) { query += ' AND total >= ?'; params.push(minPrice); }
-  if (maxPrice) { query += ' AND total <= ?'; params.push(maxPrice); }
+  if (status) {
+    query += ' AND status = ?';
+    params.push(status);
+  }
+  if (from) {
+    query += ' AND created_at >= ?';
+    params.push(from);
+  }
+  if (to) {
+    query += ' AND created_at <= ?';
+    params.push(to + ' 23:59:59');
+  }
+  if (minPrice) {
+    query += ' AND total >= ?';
+    params.push(minPrice);
+  }
+  if (maxPrice) {
+    query += ' AND total <= ?';
+    params.push(maxPrice);
+  }
 
   query += ' ORDER BY created_at DESC';
 
@@ -31,7 +51,10 @@ router.get('/orders', async (req, res) => {
 router.get('/orders/:id', async (req, res) => {
   try {
     const [[order]] = await db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
 
     const [items] = await db.query('SELECT * FROM order_items WHERE order_id = ?', [req.params.id]);
     res.json({ ...order, items });
@@ -45,7 +68,11 @@ router.get('/orders/:id', async (req, res) => {
 router.post('/orders/:id/cancel', async (req, res) => {
   try {
     const [[order]] = await db.query('SELECT status FROM orders WHERE id = ?', [req.params.id]);
-    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
     if (order.status !== 'authorized') {
       return res.status(400).json({ error: 'Only authorized orders can be cancelled.' });
     }
@@ -68,10 +95,14 @@ router.get('/shipping', async (req, res) => {
 });
 
 router.post('/shipping/:id', async (req, res) => {
-  const { max_weight, fee } = req.body;
+  const max_weight = req.body.max_weight;
+  const fee = req.body.fee;
+
   try {
-    await db.query('UPDATE shipping_rates SET max_weight = ?, fee = ? WHERE id = ?',
-      [max_weight, fee, req.params.id]);
+    await db.query(
+      'UPDATE shipping_rates SET max_weight = ?, fee = ? WHERE id = ?',
+      [max_weight, fee, req.params.id]
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Could not update shipping rate.' });

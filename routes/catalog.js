@@ -1,12 +1,9 @@
-// Catalog routes — reads from the legacy parts database
-// GET /api/catalog        → all parts (that have a price > 0)
-// GET /api/catalog/search → filter by description keyword
+// routes for loading the parts catalog from the NIU database
 
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Return all parts available in the catalog
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -19,9 +16,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Search parts by description keyword
 router.get('/search', async (req, res) => {
-  const { q } = req.query;
+  const q = req.query.q;
+
   if (!q || q.trim() === '') {
     return res.status(400).json({ error: 'Search query is required.' });
   }
@@ -29,7 +26,7 @@ router.get('/search', async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT number, description, price, weight, pictureURL FROM parts WHERE description LIKE ? AND price > 0',
-      [`%${q.trim()}%`]
+      ['%' + q.trim() + '%']
     );
     res.json(rows);
   } catch (err) {

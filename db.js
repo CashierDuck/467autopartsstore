@@ -1,5 +1,5 @@
-// Database connection to the legacy parts database at NIU
-// Uses SSL since we're connecting from outside the NIU network
+// connection to the NIU legacy parts database
+// needs SSL because we're connecting from outside their network
 
 const mysql = require('mysql2/promise');
 
@@ -9,7 +9,7 @@ const pool = mysql.createPool({
   user: 'student',
   password: 'student',
   database: 'csci467',
-  ssl: { rejectUnauthorized: false }, // required for external access
+  ssl: { rejectUnauthorized: false },
   waitForConnections: true,
   connectionLimit: 10,
 });

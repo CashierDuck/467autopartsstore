@@ -22,7 +22,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/warehouse', warehouseRoutes);
 
 // browser can't call NIU directly because of CORS, so we proxy it here server-side
-app.post('/api/authorize', (req, res) => {
+app.post('/api/authorize', function(req, res) {
   const payload = JSON.stringify({
     vendor: 'Group 6A',
     trans: req.body.trans,
@@ -43,13 +43,17 @@ app.post('/api/authorize', (req, res) => {
     },
   };
 
-  const request = http.request(options, response => {
+  const request = http.request(options, function(response) {
     let data = '';
-    response.on('data', chunk => { data += chunk; });
-    response.on('end', () => res.send(data));
+    response.on('data', function(chunk) {
+      data += chunk;
+    });
+    response.on('end', function() {
+      res.send(data);
+    });
   });
 
-  request.on('error', err => {
+  request.on('error', function(err) {
     console.error('CC proxy error:', err.message);
     res.status(502).send('Error: Could not reach payment processor.');
   });
@@ -59,10 +63,10 @@ app.post('/api/authorize', (req, res) => {
 });
 
 // everything else loads the SPA
-app.get('/{*path}', (req, res) => {
+app.get('/{*path}', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+app.listen(PORT, function() {
+  console.log('Server running at http://localhost:' + PORT);
 });
