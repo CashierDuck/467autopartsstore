@@ -12,6 +12,8 @@ async function sendConfirmation(to, name, orderId, items, subtotal, shipping, to
     port: 465,
     secure: true,
     family: 4,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
     auth: {
       user: 'mikerubio109@gmail.com',
       pass: 'geya vmky wnum dkmn',
