@@ -8,7 +8,10 @@ const db = require('../localdb');
 
 async function sendConfirmation(to, name, orderId, items, subtotal, shipping, total, authNumber) {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4,
     auth: {
       user: 'mikerubio109@gmail.com',
       pass: 'geya vmky wnum dkmn',

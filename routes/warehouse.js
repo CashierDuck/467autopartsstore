@@ -82,7 +82,10 @@ router.post('/ship/:id', async (req, res) => {
     // send shipping notification - don't let email failure break the response
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        family: 4,
         auth: {
           user: 'mikerubio109@gmail.com',
           pass: 'geya vmky wnum dkmn',
